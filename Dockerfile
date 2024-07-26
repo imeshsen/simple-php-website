@@ -4,4 +4,6 @@ COPY . /usr/src/myapp
 
 WORKDIR /usr/src/myapp
 
-CMD [ "php", "-S", "localhost:8080" ]
+EXPOSE 8080
+
+CMD [ "php", "-S", "0.0.0.0:8080" ]
