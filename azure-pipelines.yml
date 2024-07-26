@@ -24,6 +24,11 @@ stages:
       displayName: Build an image
       inputs:
         command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        dockerfile: '**/Dockerfile'
         tags: |
-          $(tag)
+          spims96/phpapp
+    - task: Docker@2
+      inputs:
+        repository: 'spims96'
+        command: 'push'
+        tags: 'phpapp'
