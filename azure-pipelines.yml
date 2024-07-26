@@ -26,7 +26,7 @@ stages:
         command: build
         dockerfile: '**/Dockerfile'
         tags: |
-          spims96/phpapp
+          phpapp
     - task: Docker@2
       inputs:
         repository: 'spims96'
