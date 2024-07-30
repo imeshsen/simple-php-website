@@ -21,14 +21,7 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: Docker@2
-      displayName: Build an image
       inputs:
-        command: build
-        dockerfile: '**/Dockerfile'
-        tags: phpapp
-
-    - task: Docker@2
-      inputs:
-        repository: 'spims96'
-        command: 'push'
-        tags: 'phpapp'
+        repository: 'spims96/phpapp'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
