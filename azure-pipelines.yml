@@ -22,6 +22,7 @@ stages:
     steps:
     - task: Docker@2
       inputs:
+        containerRegistry: dockerhub
         repository: 'spims96/phpapp'
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
