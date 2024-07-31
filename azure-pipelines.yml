@@ -42,7 +42,9 @@ stages:
         runOptions: 'commands'
         commands: |
           minikube start
+          kubectl delete deploy phpapp
           kubectl create deploy phpapp --image spims96/phpapp
+          kubectl delete svc phpapp
           kubectl expose deploy phpapp --port 8080 --type LoadBalancer
         readyTimeout: '20000'
 
