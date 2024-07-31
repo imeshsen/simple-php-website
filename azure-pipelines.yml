@@ -27,3 +27,22 @@ stages:
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
         tags: 'latest'
+
+- stage: Deploy
+  displayName: Deploy
+  jobs:
+  - job: Deploy
+    displayName: Deploy
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: SSH@0
+      inputs:
+        sshEndpoint: 'techzone'
+        runOptions: 'commands'
+        commands: |
+          minikube start
+          kubectl create deploy phpapp --image spims96/phpapp
+          kubectl expose deploy phpapp --port 8080 --type LoadBalancer
+        readyTimeout: '20000'
+
