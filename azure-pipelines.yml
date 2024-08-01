@@ -45,3 +45,10 @@ stages:
           minikube start
         readyTimeout: '20000'
 
+    - task: CopyFilesOverSSH@0
+      inputs:
+        sshEndpoint: 'techzone'
+        sourceFolder: '$(System.DefaultWorkingDirectory)'
+        contents: 'deployment.yaml'
+        targetFolder: '/home/itzuser'
+        readyTimeout: '20000'
