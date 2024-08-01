@@ -54,7 +54,7 @@ stages:
   - job: Deploy
     displayName: Run kubectl commands
     pool:
-      vmImage: ubuntu-latest
+      Default
     steps:  
     - task: SSH@0
       inputs:
