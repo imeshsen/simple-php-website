@@ -60,3 +60,6 @@ stages:
         runOptions: 'commands'
         commands: |
           echo "SSH successful"
+          minikube start
+          kubectl appy -f /home/itzuser/deployment.php
+          kubectl expose deploy phpapp --port 8080 --type NodePort
