@@ -41,7 +41,9 @@ stages:
       inputs:
         sshEndpoint: 'techzone'
         sourceFolder: '$(System.DefaultWorkingDirectory)'
-        contents: 'deployment.yaml'
+        contents: |
+          deployment.yaml
+          svc.yaml
         targetFolder: '/home/itzuser'
         readyTimeout: '20000'
 
