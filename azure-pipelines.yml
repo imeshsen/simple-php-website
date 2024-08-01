@@ -36,15 +36,7 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - task: SSH@0
-      inputs:
-        sshEndpoint: 'techzone'
-        runOptions: 'commands'
-        commands: |
-          echo "SSH successful"
-          minikube start
-        readyTimeout: '20000'
-
+    
     - task: CopyFilesOverSSH@0
       inputs:
         sshEndpoint: 'techzone'
@@ -52,3 +44,12 @@ stages:
         contents: 'deployment.yaml'
         targetFolder: '/home/itzuser'
         readyTimeout: '20000'
+
+    - task: SSH@0
+      inputs:
+        sshEndpoint: 'techzone'
+        runOptions: 'commands'
+        commands: |
+          echo "SSH successful"
+          minikube start
+        readyTimeout: '20000'    
