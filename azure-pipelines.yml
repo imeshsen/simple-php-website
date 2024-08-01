@@ -32,7 +32,7 @@ stages:
   displayName: Deploy
   jobs:
   - job: Deploy
-    displayName: Deploy
+    displayName: Deploy to kubernetes
     pool:
       vmImage: ubuntu-latest
     steps:
