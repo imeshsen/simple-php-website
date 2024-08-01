@@ -45,11 +45,11 @@ stages:
         targetFolder: '/home/itzuser'
         readyTimeout: '20000'
 
-    - task: SSH@0
-      inputs:
-        sshEndpoint: 'techzone'
-        runOptions: 'commands'
-        commands: |
-          echo "SSH successful"
-          minikube start
-        readyTimeout: '20000'    
+    # - task: SSH@0
+    #   inputs:
+    #     sshEndpoint: 'techzone'
+    #     runOptions: 'commands'
+    #     commands: |
+    #       echo "SSH successful"
+    #       minikube start
+    #     readyTimeout: '20000'    
