@@ -42,5 +42,6 @@ stages:
         runOptions: 'commands'
         commands: |
           echo "SSH successful"
+          minikube start
         readyTimeout: '20000'
 
