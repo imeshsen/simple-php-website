@@ -29,10 +29,10 @@ stages:
         tags: 'latest'
 
 - stage: Deploy
-  displayName: Deploy
+  displayName: Copy
   jobs:
   - job: Deploy
-    displayName: Deploy to kubernetes
+    displayName: Copy neccessary files
     pool:
       vmImage: ubuntu-latest
     steps:
@@ -45,10 +45,10 @@ stages:
         targetFolder: '/home/itzuser'
         readyTimeout: '20000'
 
-    - task: SSH@0
-      inputs:
-        sshEndpoint: 'techzone'
-        runOptions: 'commands'
-        commands: |
-          echo "SSH successful"
+    # - task: SSH@0
+    #   inputs:
+    #     sshEndpoint: 'techzone'
+    #     runOptions: 'commands'
+    #     commands: |
+    #       echo "SSH successful"
     
