@@ -61,5 +61,5 @@ stages:
         commands: |
           echo "SSH successful"
           minikube start
-          kubectl apply -f /home/itzuser/deployment.yaml
+          kubectl apply -f deployment.yaml
           kubectl expose deploy phpapp --port 8080 --type NodePort
