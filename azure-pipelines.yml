@@ -28,7 +28,7 @@ stages:
         Dockerfile: '**/Dockerfile'
         tags: 'latest'
 
-- stage: Deploy
+- stage: Copy
   displayName: Copy
   jobs:
   - job: Deploy
@@ -45,10 +45,18 @@ stages:
         targetFolder: '/home/itzuser'
         readyTimeout: '20000'
 
-    # - task: SSH@0
-    #   inputs:
-    #     sshEndpoint: 'techzone'
-    #     runOptions: 'commands'
-    #     commands: |
-    #       echo "SSH successful"
-    
+
+- stage: Deploy
+  displayName: Apply manifests
+  jobs:
+  - job: Deploy
+    displayName: Run kubectl commands
+    pool:
+      vmImage: ubuntu-latest
+    steps:  
+    - task: SSH@0
+      inputs:
+        sshEndpoint: 'techzone'
+        runOptions: 'commands'
+        commands: |
+          echo "SSH successful"
