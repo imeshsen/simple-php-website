@@ -6,7 +6,16 @@ trigger:
 - master
 
 resources:
-- repo: self
+#  - repo: self
+  repositories:
+  - repository: self
+  - repository: common
+    type: git
+    name: manifests
+    
+ 
+    
+ 
 
 variables:
   tag: '$(Build.BuildId)'
