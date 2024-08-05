@@ -12,10 +12,7 @@ resources:
   - repository: common
     type: git
     name: manifests
-    
- 
-    
- 
+    ref: main
 
 variables:
   tag: '$(Build.BuildId)'
@@ -49,7 +46,8 @@ stages:
     - task: CopyFilesOverSSH@0
       inputs:
         sshEndpoint: 'techzone'
-        sourceFolder: '$(System.DefaultWorkingDirectory)'
+        # sourceFolder: '$(System.DefaultWorkingDirectory)'
+        sourceFolder: '$(resources.repositories.common.ref)'
         contents: |
           deployment.yaml
           svc.yaml
