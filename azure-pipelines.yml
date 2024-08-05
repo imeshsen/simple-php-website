@@ -28,20 +28,20 @@ stages:
         Dockerfile: '**/Dockerfile'
         tags: 'latest'
 
-# - stage: Deploy
-#   displayName: Apply manifests
-#   jobs:
-#   - job: Deploy
-#     displayName: Run kubectl commands
-#     pool:
-#       Default
-#     steps:  
-#     - task: SSH@0
-#       inputs:
-#         sshEndpoint: 'techzone'
-#         runOptions: 'commands'
-#         commands: |
-#           echo "SSH successful"
-#           # minikube start
-#           kubectl apply -f deployment.yaml
-#           kubectl apply -f svc.yaml
+- stage: Deploy
+  displayName: Apply manifests
+  jobs:
+  - job: Deploy
+    displayName: Run kubectl commands
+    pool:
+      Default
+    steps:  
+    - task: SSH@0
+      inputs:
+        sshEndpoint: 'techzone'
+        runOptions: 'commands'
+        commands: |
+          echo "SSH successful"
+          # minikube start
+          kubectl apply -f deployment.yaml
+          kubectl apply -f svc.yaml
