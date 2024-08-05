@@ -28,40 +28,20 @@ stages:
         Dockerfile: '**/Dockerfile'
         tags: 'latest'
 
-- stage: Copy
-  displayName: Copy
-  jobs:
-  - job: Copy
-    displayName: Copy neccessary files
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    
-    - task: CopyFilesOverSSH@0
-      inputs:
-        sshEndpoint: 'techzone'
-        sourceFolder: '$(System.DefaultWorkingDirectory)'
-        contents: |
-          deployment.yaml
-          svc.yaml
-        targetFolder: '/home/itzuser'
-        readyTimeout: '20000'
-
-
-- stage: Deploy
-  displayName: Apply manifests
-  jobs:
-  - job: Deploy
-    displayName: Run kubectl commands
-    pool:
-      Default
-    steps:  
-    - task: SSH@0
-      inputs:
-        sshEndpoint: 'techzone'
-        runOptions: 'commands'
-        commands: |
-          echo "SSH successful"
-          # minikube start
-          kubectl apply -f deployment.yaml
-          kubectl apply -f svc.yaml
+# - stage: Deploy
+#   displayName: Apply manifests
+#   jobs:
+#   - job: Deploy
+#     displayName: Run kubectl commands
+#     pool:
+#       Default
+#     steps:  
+#     - task: SSH@0
+#       inputs:
+#         sshEndpoint: 'techzone'
+#         runOptions: 'commands'
+#         commands: |
+#           echo "SSH successful"
+#           # minikube start
+#           kubectl apply -f deployment.yaml
+#           kubectl apply -f svc.yaml
