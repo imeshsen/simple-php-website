@@ -47,7 +47,7 @@ stages:
       inputs:
         sshEndpoint: 'techzone'
         # sourceFolder: '$(System.DefaultWorkingDirectory)'
-        sourceFolder: '$(System.DefaultWorkingDirectory)/common'
+        sourceFolder: '$(System.DefaultWorkingDirectory)/manifests'
         contents: |
           deployment.yaml
           svc.yaml
