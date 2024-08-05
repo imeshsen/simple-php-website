@@ -6,13 +6,7 @@ trigger:
 - master
 
 resources:
-#  - repo: self
-  repositories:
-  - repository: self
-  - repository: common
-    type: git
-    name: manifests
-    ref: main
+ - repo: self
 
 variables:
   tag: '$(Build.BuildId)'
@@ -46,8 +40,7 @@ stages:
     - task: CopyFilesOverSSH@0
       inputs:
         sshEndpoint: 'techzone'
-        # sourceFolder: '$(System.DefaultWorkingDirectory)'
-        sourceFolder: '$(System.DefaultWorkingDirectory)/manifests'
+        sourceFolder: '$(System.DefaultWorkingDirectory)'
         contents: |
           deployment.yaml
           svc.yaml
