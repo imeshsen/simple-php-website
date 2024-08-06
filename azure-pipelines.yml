@@ -26,7 +26,7 @@ stages:
         repository: 'spims96/phpapp'
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
-        tags: 'latest'
+        tags: $(tag)
 
 # - stage: Deploy
 #   displayName: Apply manifests
