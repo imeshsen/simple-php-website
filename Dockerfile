@@ -1,12 +1,16 @@
-FROM php:8.3.6-cli
+FROM ubuntu:latest
+
+RUN apt update -y
+
+RUN apt install -y php8.3-cli 
 
 COPY . /usr/src/myapp
 
 WORKDIR /usr/src/myapp
 
-RUN chmod +x appdynamics-php-agent/runme.sh
+#RUN chmod +x appdynamics-php-agent/runme.sh
 
-RUN bash appdynamics-php-agent/runme.sh
+#RUN bash appdynamics-php-agent/runme.sh
 
 EXPOSE 8080
 
