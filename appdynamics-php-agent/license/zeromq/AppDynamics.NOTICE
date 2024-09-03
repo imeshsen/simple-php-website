@@ -1,0 +1,7 @@
+PLEASE READ THIS NOTICE CAREFULLY
+
+This AppDynamics PHP-agent uses third-party library ZeroMQ v3.2.5.
+
+The above mentioned third-party library has been modified to function
+as per the agent requirement. The original source code can be found
+here: http://download.zeromq.org/.

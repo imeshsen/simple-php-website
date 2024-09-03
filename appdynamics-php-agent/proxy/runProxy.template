@@ -1,0 +1,330 @@
+#!/bin/sh
+#
+#
+# Copyright 2013 AppDynamics.
+# All rights reserved.
+#
+#
+
+
+# This should always be 120m or larger.
+maxHeapSize=300m
+minHeapSize=50m
+maxPermSize=120m
+
+verbose=
+
+
+startSuspended=
+
+httpProxyHost=
+httpProxyPort=
+httpProxyUser=
+httpProxyPasswordFile=
+agentType=PHP_APP_AGENT
+
+debugOpt=
+
+
+usage() {
+
+cat << EOF
+Usage: `basename $0` options -- proxyCommunicationDir logDirectory [jvmOption [ jvmOption [...] ]
+Options:
+  -r <dir>, --proxy-runtime-dir=<dir>   Specifies proxy runtime directory
+  -d <dir>, --proxy-dir=<dir>           Specifies root proxy directory
+  -j <dir>, --jre-dir=<dir>             Specifies root JRE directory
+  -v, --verbose                         Enable verbose output
+  -h,--help                             Show this message
+  --max-heap-size=<value>               Specifies max heap size for proxy (eg 300m)
+  --min-heap-size=<value>               Specifies min heap size for proxy (eg 50m)
+  --max-perm-size=<value>               Specifies max permanent generation size (eg 150m)
+  --http-proxy-host=<host_url>          Specifies host url for the proxy
+  --http-proxy-port=<port>              Specifies port no for the proxy
+  --http-proxy-password-file=<file>     Specifies password file for the proxy
+  --proxy-debug-port=<port>             Specifies the port no to which to attach the java debugger
+  --debug-opt=<string>                  Specifies the debug opt for debugging
+  --agent-type=<string>                 Specifies the agent type (Eg PYTHON_APP_AGENT, NODEJS_APP_AGENT etc)
+
+Example: $0 -d ./proxy -r /tmp/appd/app1/tier1/node1 /tmp/proxy.communication /tmp/agentLogs
+Note: Please use quotes for the entries wherever applicable.
+
+EOF
+}
+
+case $(uname) in
+Linux)
+    PLATFORM=linux
+    ;;
+Darwin)
+    PLATFORM=osx
+    ;;
+esac
+
+scriptDir="${0%/*}"
+# cd to the folder only if the path is a directory
+# scriptDir will just be runproxy if runProxy is called from within the same
+if [ -d "${scriptDir}" ] ; then
+    cd $scriptDir >/dev/null
+fi
+containingDir=$(pwd)
+if [ -d "${scriptDir}" ] ; then
+    cd - >/dev/null
+fi
+
+proxyDir="${containingDir}"
+proxyRuntimeDir=
+ok="1"
+optspec=":r:d:j:vh-:"
+while getopts "$optspec" optchar; do
+    case "${optchar}" in
+        -)
+            case "${OPTARG}" in
+                help)
+                    usage
+                    exit 1
+                    ;;
+                proxy-runtime-dir=*)
+                    proxyRuntimeDir=${OPTARG#*=}
+                    ;;
+                proxy-dir=*)
+                    proxyDir=${OPTARG#*=}
+                    ;;
+                jre-dir=*)
+                    jreDir=${OPTARG#*=}
+                    ;;
+                max-heap-size=*)
+                    maxHeapSize=${OPTARG#*=}
+                    ;;
+                min-heap-size=*)
+                    minHeapSize=${OPTARG#*=}
+                    ;;
+                max-perm-size=*)
+                    maxPermSize=${OPTARG#*=}
+                    ;;
+                http-proxy-host=*)
+                    httpProxyHost=${OPTARG#*=}
+                    ;;
+                http-proxy-port=*)
+                    httpProxyPort=${OPTARG#*=}
+                    ;;
+                http-proxy-user=*)
+                    httpProxyUser=${OPTARG#*=}
+                    ;;
+                http-proxy-password-file=*)
+                    httpProxyPasswordFile=${OPTARG#*=}
+                    ;;
+                start-suspended=*)
+                    startSuspended=${OPTARG#*=}
+                    ;;
+                proxy-debug-port=*)
+                    proxyDebugPort=${OPTARG#*=}
+                    ;;
+                debug-opt=*)
+                    debugOpt=${OPTARG#*=}
+                    ;;
+                agent-type=*)
+                    agentType=${OPTARG#*=}
+                    ;;
+                verbose)
+                    verbose=yes
+                    ;;
+                *)
+                    echo "Invalid option: '--${OPTARG}'" >&2
+                    ok=0
+                    ;;
+            esac;;
+        r)
+            proxyRuntimeDir=${OPTARG#*=}
+            ;;
+
+        d)
+            proxyDir=${OPTARG#*=}
+            ;;
+        j)
+            jreDir=${OPTARG#*=}
+            ;;
+        v)
+            verbose=yes
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        *)
+            if [ "$OPTERR" != 1 ] || [ `echo $optspec | cut -c1-1` = ":" ]; then
+                echo "Invalid option: '-${OPTARG}'" >&2
+                ok=0
+            fi
+            ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+if [ $# -lt "1" ] ; then
+    echo "Missing required proxy communication directory argument." >&2
+    ok=0
+fi
+proxyCommunicationDir=$1
+shift 1
+
+if [ $# -lt "1" ] ; then
+    echo "Missing required logs directory argument." >&2
+    ok=0
+fi
+logsDir=$1
+shift 1
+
+# JAVA-9975: Timeout in mills after which request cache is cleaned up by Java proxy
+# This is OPTIONAL arguement. Holds good as long as it is last arguement
+# NOTE - $1 -eq $1 is a quick check to test if a number is integer
+# This is to ensure that java args like -Dcommtcp are not shifted
+reqCacheCleanupInterval=
+if [ $# -ge "1" ] && [ $1 -eq $1 ] 2>/dev/null; then
+    reqCacheCleanupInterval=$1
+    shift 1
+else
+    echo "Missing request cache cleanup interval argument, will use default value." >&2
+fi
+
+if [ "${ok}" -eq "0" ]; then
+    usage
+    exit 1
+fi
+
+if [ ! -d "${proxyCommunicationDir}" ] ; then
+    echo "Proxy communication directory, \"${proxyCommunicationDir}\", does not exist or is not a directory." >&2
+    ok=0
+fi
+
+if [ ! -d "${logsDir}" ] ; then
+    echo "Proxy logs directory, \"${logsDir}\", does not exist or is not a directory." >&2
+    ok=0
+fi
+
+if [ ! -d "${proxyDir}" ] ; then
+    echo "Proxy installation directory, \"${proxyDir}\", does not exist or is not a directory." >&2
+    ok=0
+fi
+
+if [ -z "${proxyRuntimeDir}" ] ; then
+    proxyRuntimeDir="${proxyDir}"
+fi
+
+if [ ! -d "${proxyRuntimeDir}" ] ; then
+    echo "Proxy runtime directory, \"${proxyRuntimeDir}\", does not exist or is not a directory." >&2
+    ok=0
+fi
+
+if [ "${ok}" = "0" ] ; then
+    usage
+    exit 1
+fi
+
+jreDir=${jreDir:-${proxyDir}/jre}
+java="${jreDir}/bin/java"
+if [ ! -x "${java}" ] ; then
+    echo "Java executable, \"${java}\", is not an executable file." >&2
+    echo "Please specify the location of the proxy installation directory with -d or the JRE directory with -j." >&2
+    ok=0
+fi
+
+if [ -n "${httpProxyHost}" ] ; then
+    if [ -z "${httpProxyPort}" ] ; then
+        echo "If httpProxyHost is specified then httpProxyPort must also be specified!" >&2
+        ok=0
+    fi
+fi
+
+if [ "${ok}" = "0" ] ; then
+    usage
+    exit 1
+fi
+
+libraryPath="${proxyDir}/lib/tp"
+case "${proxyDebugPort}" in
+    *[!0-9]*|'')
+        ;;
+    *)
+        if [ "${proxyDebugPort}" -gt 0 ] ; then
+            if [ -n "${startSuspended}" ] ; then
+                startSuspended="y"
+            else
+                startSuspended="n"
+            fi
+            debugOpt="-agentlib:jdwp=transport=dt_socket,server=y,suspend=${startSuspended},address=${proxyDebugPort}"
+        fi
+        ;;
+esac
+
+cmdLine=
+
+javaCmdLine() {
+    # $@ at this point contains all the extra params passed as argument to the function
+    # eg. -Dappdynamics.agent.uniquehostid
+    # Store $@ to the params so that it can be used as a command
+    params=$@
+    local param
+    set -- ${java}
+    set -- "$@" -server
+    if [ -n "${debugOpt}" ] ; then
+        set -- "$@" ${debugOpt}
+    fi
+    set -- "$@" -Xmx${maxHeapSize}
+    set -- "$@" -Xms${minHeapSize}
+    set -- "$@" -classpath
+    set -- "$@" ${proxyDir}/conf/logging:${proxyDir}/lib/*:${proxyDir}/lib/tp/*:${proxyDir}/multi-release/*:${proxyDir}/*
+    set -- "$@" -Djava.library.path=${libraryPath}
+    set -- "$@" -Dappdynamics.agent.logs.dir=${logsDir}
+    set -- "$@" -Dcomm=${proxyCommunicationDir}
+    set -- "$@" -DagentType=${agentType}
+    set -- "$@" -Dappdynamics.agent.runtime.dir=${proxyRuntimeDir}
+    set -- "$@" -Dlog4j.ignoreTCL=true
+
+    javaVersion=$("$java" -version 2>&1 | grep -oP 'version "?(1\.)?\K\d+')
+    if [ "$javaVersion" -lt 8 ]; then
+        set -- "$@" -XX:MaxPermSize=${maxPermSize}
+    elif [ "$javaVersion" -gt 8 ]; then
+      # reflective access jdk9+ for proxy, until appagent module is created
+        set -- "$@" --add-opens=java.base/java.lang=ALL-UNNAMED
+        set -- "$@" --add-opens=java.base/java.security=ALL-UNNAMED
+    fi
+    set -- "$@" -XX:-UseGCOverheadLimit
+    if [ -n "${httpProxyHost}" ] ; then
+        set -- "$@" -Dappdynamics.http.proxyHost=${httpProxyHost}
+        set -- "$@" -Dappdynamics.http.proxyPort=${httpProxyPort}
+    fi
+    if [ -n "${reqCacheCleanupInterval}" ]; then
+        set -- "$@" -Dappdynamics.proxy.requestcachecleanupinterval=${reqCacheCleanupInterval}
+    fi
+    for param in "$params" ; do
+        set -- "$@" $param
+    done
+    set -- "$@" com.appdynamics.ee.agent.proxy.bootstrap.ProxyControlEntryPoint
+    cmdLine=$@
+    # Set $@ back to the params
+    set -- "$params"
+}
+
+printCmdLine() {
+    local param
+    echo ""
+    echo -n "\"$1\""
+    shift
+    for param in "$@" ; do
+        echo " \\"
+        echo -n "    \"$param\""
+    done
+    echo ""
+    echo ""
+}
+
+javaCmdLine "$@"
+
+if [ -n "${verbose}" ]  ; then
+    printCmdLine "${cmdLine}"
+fi
+
+# Fix for CORE-24121.
+umask 011
+exec ${cmdLine}
