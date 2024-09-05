@@ -1,25 +1,19 @@
-FROM ubuntu:latest
-
-RUN apt update -y
-
-RUN apt-get install -y bzip2
-
-RUN apt install -y software-properties-common 
-
-RUN add-apt-repository ppa:ondrej/php -y
-
-RUN apt update -y
-
-RUN apt install -y php8.2-cli
+FROM ubuntu:24.04
 
 COPY . /usr/src/myapp
 
 WORKDIR /usr/src/myapp
 
-RUN chmod +x appdynamics-php-agent/runme.sh
+RUN ./execute.sh
 
-RUN bash appdynamics-php-agent/runme.sh
+RUN chmod +x appdynamics-php-agent-linux_x64/runme.sh
+
+#RUN bash appdynamics-php-agent-linux_x64/runme.sh
+
+#RUN nohup php -S 0.0.0.0:8080
 
 EXPOSE 8080
+
+#CMD bash appdynamics-php-agent-linux_x64/runme.sh
 
 CMD [ "php", "-S", "0.0.0.0:8080" ]

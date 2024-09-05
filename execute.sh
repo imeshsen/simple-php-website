@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+
+apt update -y
+
 apt-get install -y bzip2
 
 apt install -y software-properties-common
